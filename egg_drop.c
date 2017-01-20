@@ -3,114 +3,145 @@
 #include <sysexits.h>
 #include <stdint.h>
 #include <limits.h>
+#include <errno.h>
 
 #include "egg.h"
 
-size_t binary(int num_drops, size_t floors);
-double max_drops(long floors);
+size_t binary(size_t floors);
+double max_drops(double floors);
 int main(int argc, char *argv[])
 {
+	int count = 0;
 	//This is checking to make sure the appropriate numbers of arguments 
 	//were passed to the program
 	if(argc > 3 || argc < 3)
 	{
 		printf("The format is floors and then eggs\n");
-		return EX_USAGE;
-		
+		return EX_USAGE;	
 	}
 
+	// Site Mcmaster
 	char *bad;
-	size_t floors = strtol(argv[1], &bad, 10);
-	
-	//This is checking to make sure the values passed are good values
-	if(*bad|| floors > UINT_MAX || floors < 1)
+	errno = 0; 
+	if(argv[1][0] == '-' || argv[2][0] == '-')
 	{
-		printf("Floor Max=UINT_MAX\nFloor Min=1\nNo decimals\nNumbers Only\n");
+		printf("Negative numbers not allowed");
 		return EX_USAGE;
 	}
-
-	//This is checking to make sure the egg value is good
-	int num_drops = strtol(argv[2], &bad, 10);
-	if(*bad || num_drops > INT_MAX || num_drops < 1)
+	
+	size_t floors = strtoull(argv[1], &bad, 10);
+	if(*bad || errno)
+	{
+		printf("Floor Max=UINT_MAX\nNo decimals\nNumbers Only\n");
+		return EX_USAGE;
+	}
+	
+	errno = 0;
+	int num_drops = strtoull(argv[2], &bad, 10);
+	if(*bad || errno)
 	{
 		printf("Egg Max=INT_MAX\nEgg Min=1\nNo Decimals\nNumbers only\n");
 		return EX_USAGE;
 	}
 	
-	
-	size_t half;
-	while(num_drops >= 3)
-	{
-		half = binary(num_drops, floors);
-		printf("%zd", half);
-	}
-	size_t start = max_drops(half);
-	printf("start = %zd\n", start);
-
-	size_t drop = start;
+	double start = floors;
+	double drop = start;
 	int i = 1;
-	size_t prior;
-	egg *test = lay_egg();
-	for(drop = start; drop < floors; i++)
+	double last_good = 0;
+	egg *test = lay_egg();	
+
+
+	if(num_drops == 2)
 	{
-		egg_drop_from_floor(test, drop);
-		if(egg_is_broken(test))
+		start = max_drops(start);
+		drop =start;
+	
+		while(num_drops > 1)
 		{
-			printf("Egg broke at %zd", drop);
-			break;
+			
+			egg_drop_from_floor(test, drop);
+			++count;
+
+			if(egg_is_broken(test))
+			{
+				num_drops --;
+				printf("#%zd CRACKED\n", (size_t)drop);
+				break;
+			}
+			printf("#%zd safe\n", (size_t)drop);
+			last_good = drop;
+			drop += start - i;
+			i ++;
 		}
-		printf("drop %zd\n", drop);
-		prior = drop;
-		drop += start - i;
+
+
+	destroy_egg(test);
+	test = lay_egg();
+	//printf("num_drops %d\n", num_drops);
+
 	}
 
-	while(egg_is_broken(test))
+
+	//printf("Debug last_good = %zd\n", (size_t)last_good);
+	if(num_drops == 1)
 	{
-		prior++;
-		egg_drop_from_floor(test,drop);
+		
+		while(num_drops)
+		{	
+
+			last_good++;
+			printf("Last Good %zd\n", (size_t)last_good);
+			printf("Floors %zd\n", (size_t) last_good);
+			egg_drop_from_floor(test,last_good);
+			count++;
+			
+			if(egg_is_broken(test))
+			{
+				num_drops --;
+				printf("#%zd CRACK\n", (size_t)last_good);
+				destroy_egg(test);
+				//count++;
+				break;
+			}
+
+			printf("#%zd safe\n", (size_t)last_good);
+
+			if((size_t)last_good == (size_t)floors)
+			{
+				num_drops--;
+				last_good++;
+			 	break;
+			}
+
+			
+		}
+		printf("%zd is the maximum safe floor found in %d drops\n", 
+				(size_t)last_good-1, count);
 	}
+	
+	
+}	
 
-	int max_safe = prior -1;
-	printf("max safe %d", max_safe);
 
-	//TODO -> figure out if you have more eggs
-	//TODO -> Command line input and all that good shit. 
 
-}
-
-double max_drops(long floors)
+double max_drops(double floors)
 {
 	double b =1;
 	double a= 1;
 	double c = floors * -2;
 
-	double max_drops = ceil((-b + sqrt(b*b - 4*a*c)) / (2*a));
+	double max_trys = ceil((-b + sqrt(b*b - 4*a*c)) / (2*a));
 	//printf("temp before rounding = %lf\n", );
 
 	//int max_drops = ceil(temp);
 
-	//printf("%d\n", max_drops);
+	printf("%zd\n", (size_t)max_trys);
 
-	return max_drops;
+	return max_trys;
 
 }
 
-size_t binary(int num_drops, size_t floors)
-{
-	size_t drop_point = floors;
-	egg *test  = lay_egg();
-	
-	while(test)
-	{
-		drop_point /= 2;
-		egg_drop_from_floor(test, drop_point);
-		size_t temp = drop_point;	
-		if(egg_is_broken(test)
-		{
-			return temp;
-		}
-	}
-}		
+		
 	
 	
 
