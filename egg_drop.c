@@ -133,6 +133,7 @@ main (int argc, char *argv[])
 	    {
 	      num_eggs--;
 	      printf ("#%zd CRACK\n", (size_t) drop);
+	      max=drop;
 	      break;
 	    }
 	  printf ("#%zd safe\n", (size_t) drop);
@@ -158,8 +159,9 @@ main (int argc, char *argv[])
   //This will implement the linear search when there is one egg
   if (num_eggs == 1)
     {
-
       egg *Dumpty = lay_egg ();
+	
+	//This will simply walk forward until your egg cracks
       while (num_eggs)
 	{
 
@@ -176,7 +178,7 @@ main (int argc, char *argv[])
 
 	  printf ("#%zd safe\n", (size_t) min);
 
-	  if ((size_t) min == (size_t) floors)
+	  if ((size_t) (min+1) == (size_t) max)
 	    {
 	      num_eggs--;
 	      min++;
