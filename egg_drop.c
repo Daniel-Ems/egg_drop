@@ -7,7 +7,7 @@
 
 #include "egg.h"
 
-size_t binary (size_t floors);
+//double linear_search(double min, int *count, size_t *num_drops, size_t floors);
 double max_drops (double floors);
 int
 main (int argc, char *argv[])
@@ -21,15 +21,17 @@ main (int argc, char *argv[])
       return EX_USAGE;
     }
 
-  // Site Mcmaster
-  char *bad;
-  errno = 0;
+  //This checks for negative numbers
   if (argv[1][0] == '-' || argv[2][0] == '-')
     {
-      printf ("Negative numbers not allowed");
+      printf ("Negative numbers not allowed\n");
       return EX_USAGE;
     }
 
+  // Site McMaster --> McMaster found, and then explained that way to handle
+  // potentially dealing with numbers too large.
+  char *bad;
+  errno = 0;
   size_t floors = strtoull (argv[1], &bad, 10);
   if (*bad || errno)
     {
@@ -37,109 +39,138 @@ main (int argc, char *argv[])
       return EX_USAGE;
     }
 
-
+  //McMaster is also sited here for the same reason, however, it is being
+  //applied to the other argument.
   errno = 0;
-  size_t num_drops = strtoull (argv[2], &bad, 10);
+  size_t num_eggs = strtoull (argv[2], &bad, 10);
   if (*bad || errno)
     {
       printf ("Egg Max=INT_MAX\nEgg Min=1\nNo Decimals\nNumbers only\n");
       return EX_USAGE;
     }
 
-
-  double half;
-  double step;
-  double drop;
-  int i = 1;
+  double half, step, drop; 
   double min = 0;
   double max = floors;
 
-  egg *test = lay_egg ();
-  while (num_drops > 2)
-    {
-      half = ceil ((max - min) / 2);
-      drop = max - half;
+  //This is the beginning of the program checks for the first 
 
-      egg_drop_from_floor (test, drop);
+  if(num_eggs> 2)
+	{
+		egg *Binedict = lay_egg ();
+  //The first case is to check and use any eggs over two to perform binary
+  //searches. This for loop, will continue to perform binary searches as long
+  //as either the number has not been found, or their are only two eggs left.
+  while (num_eggs > 2)
+    {
+	  
+	  //half is used to find the next point in the binary search
+	  half = ceil ((max - min) / 2);		
+	  
+      drop = max - half;
+	   
+  	  //Here we drop the egg and increment our counter
+      egg_drop_from_floor (Binedict, drop);
       ++count;
 
-      if (egg_is_broken (test))
+	  //This will check if the egg is broken. If so, we will subtract from our 
+	  //num_eggs, and set up the program for it's next pass. 
+      if (egg_is_broken (Binedict))
 	{
-	  num_drops--;
 	  printf ("#%zd CRACK\n", (size_t) drop);
-	  destroy_egg (test);
-	  test = lay_egg ();
+
+      //Decrementing the eggs is necessary to know which formula to run
+	  num_eggs--;	
+	  
+	  //This destroy will catch the first egg laid, and any others produced by 
+	  //this function.
+	  destroy_egg (Binedict);
+	  Binedict = lay_egg ();
 	  max = drop;
 	}
-      else
+	  //if the egg is not broken we need to update our min.
+      else 
 	{
 	  printf ("#%zd safe\n", (size_t) drop);
 	  min = drop;
-	  if ((size_t) (min + 1) == (size_t) max)
-	    {
-	      num_drops = 0;
-	      min = max;
+
+	  //This prevents an instance of our binary being within 1 of our max. 
+	  //causing the program looping.
+	  if((size_t)drop == (size_t)(max-1))
+	  {
+      	  num_eggs = 0;
+		  min = max+1;
 	      break;
-	    }
+	  }
+	  
 	}
 
-
     }
+	destroy_egg(Binedict);
+	}
 
+  //The following statement is used when there are only two eggs remaining. 
+  //This allows for the most consistantly efficient search.
 
-
-
-  if (num_drops == 2)
+  int i = 1;
+  if (num_eggs == 2)
     {
+	  egg *Humpty = lay_egg();
+	  //This will return the incrementing value for qudratic search
       step = max_drops (max);
+     
+      //this will determine our first place to drop
       drop = min + step;
 
-      while (num_drops > 1)
+	//The quadratic search wil only be 
+      while (num_eggs > 1)
 	{
 
-	  egg_drop_from_floor (test, drop);
+	  egg_drop_from_floor (Humpty, drop);
 	  ++count;
 
-	  if (egg_is_broken (test))
+	  if (egg_is_broken (Humpty))
 	    {
-	      num_drops--;
-	      printf ("#%zd CRACKED\n", (size_t) drop);
+	      num_eggs--;
+	      printf ("#%zd CRACK\n", (size_t) drop);
 	      break;
 	    }
 	  printf ("#%zd safe\n", (size_t) drop);
+		
+	  //The quadratic search works because of the following increment formula
+      //the summation is used to balance present counts against the risk of 
+	  //potential future counts. 
 	  min = drop;
 	  drop += step - i;
 	  i++;
-	  if ((size_t) min == (size_t) floors)
+
+	  //This makes sure that if the min doesn't run past the max floor
+	  if ((size_t) min == (size_t) max)
 	    {
-	      num_drops = 0;
-	      min = max + 1;
+	      num_eggs = 0;
+	      min++;
 	      break;
 	    }
 	}
-
-
-      destroy_egg (test);
-      test = lay_egg ();
-
+	destroy_egg(Humpty);
     }
-
-  if (num_drops == 1)
+  
+  //This will implement the linear search when there is one egg
+  if (num_eggs == 1)
     {
 
-      while (num_drops)
+      egg *Dumpty = lay_egg ();
+      while (num_eggs)
 	{
 
 	  min++;
-	  egg_drop_from_floor (test, min);
+	  egg_drop_from_floor (Dumpty, min);
 	  count++;
 
-	  if (egg_is_broken (test))
+	  if (egg_is_broken (Dumpty))
 	    {
-	      num_drops--;
+	      num_eggs--;
 	      printf ("#%zd CRACK\n", (size_t) min);
-	      destroy_egg (test);
-	      //count++;
 	      break;
 	    }
 
@@ -147,22 +178,31 @@ main (int argc, char *argv[])
 
 	  if ((size_t) min == (size_t) floors)
 	    {
-	      num_drops--;
+	      num_eggs--;
 	      min++;
 	      break;
 	    }
 
 
 	}
-    }
+	destroy_egg(Dumpty);
+	}
 
   printf ("%zd is the maximum safe floor found in %d drops\n",
 	  (size_t) min - 1, count);
 
 }
+/*******************************************************************************
+Max_drops applies the quadratic formula to value passed, and then returns it to 
+program. Before the qudratic formula is applied, the value passed is multiplied
+by a -2. This comes from the formula N*(N+1)/2=floors. This, in addition with
+the quadratic formula provides the first step, as well as the incrementing value
+to be applied between min and max.
 
-
-
+---> Site Ciullo <---
+The programmed formula was programmed earlier in the course. Ciullo helped me to
+locate a good working version of the formula. 
+*******************************************************************************/
 double
 max_drops (double floors)
 {
@@ -170,12 +210,10 @@ max_drops (double floors)
   double a = 1;
   double c = floors * -2;
   double max_trys = ceil ((-b + sqrt (b * b - 4 * a * c)) / (2 * a));
-  //printf("temp before rounding = %lf\n", );
-
-  //int max_drops = ceil(temp);
-
-  printf ("%zd\n", (size_t) max_trys);
 
   return max_trys;
 
 }
+
+
+ 
