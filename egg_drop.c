@@ -55,6 +55,13 @@ main (int argc, char *argv[])
 
   //This is the beginning of the program checks for the first 
 
+  if (floors <= 1)
+    {
+      count = 1;
+      min = 2;
+      num_eggs = 0;
+    }
+
   if (num_eggs > 2)
     {
       egg *Binedict = lay_egg ();
@@ -146,10 +153,10 @@ main (int argc, char *argv[])
 	  i++;
 
 	  //This makes sure that if the min doesn't run past the max floor
-	  if ((size_t) min == (size_t) max)
+	  if ((size_t) min >= (size_t) max)
 	    {
 	      num_eggs = 0;
-	      min++;
+	      min = max + 1;
 	      break;
 	    }
 	}
@@ -164,7 +171,6 @@ main (int argc, char *argv[])
       //This will simply walk forward until your egg cracks
       while (num_eggs)
 	{
-
 	  min++;
 	  egg_drop_from_floor (Dumpty, min);
 	  count++;
